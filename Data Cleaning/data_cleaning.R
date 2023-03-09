@@ -512,6 +512,13 @@ summary(trafficAccident2020.dt$Driver_Height)
 # 23% of rows where height is unknown
 nrow(trafficAccident2020.dt[Driver_Height %in% c(998,999), ])/nrow(trafficAccident2020.dt) * 100
 
+# Getting median height of drivers where the heights of the driver are known
+median_Driver_Height <-  median(trafficAccident2020.dt$Driver_Height[which(trafficAccident2020.dt$Driver_Height %!in% c(998,999))])
+median_Driver_Height
+
+# Replacing unknown heights with the median of the remaining drivers
+trafficAccident2020.dt$Driver_Height[which(trafficAccident2020.dt$Driver_Height %in% c(998,999))] <- median_Driver_Height
+
 
 # Convert to metre
 height_converter <- function(x){
@@ -532,6 +539,12 @@ summary(trafficAccident2020.dt$Driver_Weight)
 # 46% of rows unknown
 nrow(trafficAccident2020.dt[Driver_Weight %in% c(997,998,999), ])/nrow(trafficAccident2020.dt) * 100
 
+# Getting median weight of the remaining rows where the weight of the drivers are known
+median_Driver_Weight <-  median(trafficAccident2020.dt$Driver_Weight[which(trafficAccident2020.dt$Driver_Weight %!in% c(997,998,999))])
+median_Driver_Weight
+
+# Replacing all unknown rows with the median weight
+trafficAccident2020.dt$Driver_Weight[which(trafficAccident2020.dt$Driver_Weight %in% c(997,998,999))] <- median_Driver_Weight
 
 # Convert to kg
 weight_converter <- function(x){
@@ -768,9 +781,36 @@ print(n=25, trafficAccident2020.dt %>%
 # CLEANING 37. Type_Of_Intersection
 #==================================#
 
+# Getting no of values and percentage for each level
+trafficAccident2020.dt %>% 
+  group_by(Type_Of_Intersection) %>%
+  summarise(no_rows = length(Type_Of_Intersection), percentage = length(Type_Of_Intersection)/nrow(trafficAccident2020.dt) * 100)
+
+# Low amount of unknowns, we will simply replace them  with the mode here
+nrow(trafficAccident2020.dt[Type_Of_Intersection %in% c(98,99), ])/nrow(trafficAccident2020.dt) * 100
+
 #===============================#
 # CLEANING 38. Location_Of_Crash
 #===============================#
+
+# Getting no of values and percentage for each level
+trafficAccident2020.dt %>% 
+  group_by(Location_Of_Crash) %>%
+  summarise(no_rows = length(Location_Of_Crash), percentage = length(Location_Of_Crash)/nrow(trafficAccident2020.dt) * 100)
+
+# Low amount of unknowns, we will simply replace them  with the mode here
+nrow(trafficAccident2020.dt[Location_Of_Crash %in% c(11,98,99), ])/nrow(trafficAccident2020.dt) * 100
+
+# Replacing '1', '11', '98','99' with On_Roadway
+trafficAccident2020.dt$Location_Of_Crash[trafficAccident2020.dt$Location_Of_Crash %in% c(1,11,98,99)] <- 'On_Roadway'
+
+# Replacing '2','3','4','5','6','7','8','10','12' with Off_Roadway
+trafficAccident2020.dt$Location_Of_Crash[trafficAccident2020.dt$Location_Of_Crash %in% c(2,3,4,5,6,7,8,10,12)] <- 'Off_Roadway'
+
+# Checking
+trafficAccident2020.dt %>% 
+  group_by(Location_Of_Crash) %>%
+  summarise(no_rows = length(Location_Of_Crash), percentage = length(Location_Of_Crash)/nrow(trafficAccident2020.dt) * 100)
 
 #=============================#
 # CLEANING 39. Light_Condition
@@ -811,11 +851,35 @@ trafficAccident2020.dt %>%
 # ~ 7 %, can be replaced with mode.
 nrow(trafficAccident2020.dt[Weather %in% c(3,4,6,7,8,11,98,99), ])/nrow(trafficAccident2020.dt) * 100
 
+# Replacing '1','3','4','6','7','8','11','98','99' with Clear weather since its the mode. Some of these weather conditions are not applicable in Singapore
+# hence we replace them with the mode. 
 
+trafficAccident2020.dt$Weather[trafficAccident2020.dt$Weather %in% c(1,3,4,6,7,8,11,98,99)] <- 'Clear'
+
+# Replacing '2' and '12' with rain
+trafficAccident2020.dt$Weather[trafficAccident2020.dt$Weather %in% c(2,12)] <- 'Rain'
+
+# Replacing '5' with Fog
+trafficAccident2020.dt$Weather[trafficAccident2020.dt$Weather == 5] <- 'Fog'
+
+# Replacing '10' with Cloudy
+trafficAccident2020.dt$Weather[trafficAccident2020.dt$Weather == 10] <- 'Cloudy'
+
+# Checking
+trafficAccident2020.dt %>% 
+  group_by(Weather) %>%
+  summarise(no_rows = length(Weather), percentage = length(Weather)/nrow(trafficAccident2020.dt) * 100)
 
 #===========================#
 # CLEANING 41. Fatality_Rate
 #===========================#
+
+# Getting no of values and percentage for each level
+print(n = 42,trafficAccident2020.dt %>% 
+  group_by(Fatality_Rate) %>%
+  summarise(no_rows = length(Fatality_Rate), percentage = length(Fatality_Rate)/nrow(trafficAccident2020.dt) * 100))
+
+# All good , nothing to clear
 
 #==================================================================================================================================#
 #                                                       END OF DATA CLEANING                                                       #
