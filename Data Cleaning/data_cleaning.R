@@ -773,9 +773,39 @@ print(n=25, trafficAccident2020.dt %>%
 # CLEANING 35. Harmful_Event
 #===========================#
 
+# Getting no of values and percentage for each level
+trafficAccident2020.dt %>% 
+  group_by(Relation_To_Junction) %>%
+  summarise(no_rows = length(Relation_To_Junction), percentage = length(Relation_To_Junction)/nrow(trafficAccident2020.dt) * 100)
+
 #==================================#
 # CLEANING 36. Relation_To_Junction
 #==================================#
+
+# Getting no of values and percentage for each level
+trafficAccident2020.dt %>% 
+  group_by(Relation_To_Junction) %>%
+  summarise(no_rows = length(Relation_To_Junction), percentage = length(Relation_To_Junction)/nrow(trafficAccident2020.dt) * 100)
+
+# Low amount of unknowns, we will simply replace them  with the mode here
+nrow(trafficAccident2020.dt[Relation_To_Junction %in% c(98,99), ])/nrow(trafficAccident2020.dt) * 100
+
+# Replacing '1', '98','99' with Non_Junction
+trafficAccident2020.dt$Relation_To_Junction[trafficAccident2020.dt$Relation_To_Junction %in% c(1,98,99)] <- 'Non_Junction'
+
+# Replacing '2','3' with Intersection
+trafficAccident2020.dt$Relation_To_Junction[trafficAccident2020.dt$Relation_To_Junction %in% c(2,3)] <- 'Intersection'
+
+# Replacing  '5' ,'6' ,'7' , '16', '17', '18', '19', '20' with Others
+trafficAccident2020.dt$Relation_To_Junction[trafficAccident2020.dt$Relation_To_Junction %in% c(5,6,7,16,17,18,19,20)] <- 'Others'
+
+# Replacing '4', '8' with Driveway_Access
+trafficAccident2020.dt$Relation_To_Junction[trafficAccident2020.dt$Relation_To_Junction %in% c(4,8)] <- 'Driveway_Access'
+
+# Checking
+trafficAccident2020.dt %>% 
+  group_by(Relation_To_Junction) %>%
+  summarise(no_rows = length(Relation_To_Junction), percentage = length(Relation_To_Junction)/nrow(trafficAccident2020.dt) * 100)
 
 #==================================#
 # CLEANING 37. Type_Of_Intersection
@@ -787,7 +817,36 @@ trafficAccident2020.dt %>%
   summarise(no_rows = length(Type_Of_Intersection), percentage = length(Type_Of_Intersection)/nrow(trafficAccident2020.dt) * 100)
 
 # Low amount of unknowns, we will simply replace them  with the mode here
-nrow(trafficAccident2020.dt[Type_Of_Intersection %in% c(98,99), ])/nrow(trafficAccident2020.dt) * 100
+nrow(trafficAccident2020.dt[Type_Of_Intersection %in% c(11,98,99), ])/nrow(trafficAccident2020.dt) * 100
+
+# Replacing '1', '11', '98','99' with Not_Intersection
+trafficAccident2020.dt$Type_Of_Intersection[trafficAccident2020.dt$Type_Of_Intersection %in% c(1,11,98,99)] <- 'Not_Intersection'
+
+# Replacing '2' with 4_Way
+trafficAccident2020.dt$Type_Of_Intersection[trafficAccident2020.dt$Type_Of_Intersection == 2] <- '4_Way'
+
+# Replacing '3' with T
+trafficAccident2020.dt$Type_Of_Intersection[trafficAccident2020.dt$Type_Of_Intersection == 3] <- 'T'
+
+# Replacing '4' with Y
+trafficAccident2020.dt$Type_Of_Intersection[trafficAccident2020.dt$Type_Of_Intersection == 4] <- 'Y'
+
+# Replacing '5' with Traffic_Circle
+trafficAccident2020.dt$Type_Of_Intersection[trafficAccident2020.dt$Type_Of_Intersection == 5] <- 'Traffic_Circle'
+
+# Replacing '6' with Roundabout
+trafficAccident2020.dt$Type_Of_Intersection[trafficAccident2020.dt$Type_Of_Intersection == 6] <- 'Roundabout'
+
+# Replacing '7' with 5_Point
+trafficAccident2020.dt$Type_Of_Intersection[trafficAccident2020.dt$Type_Of_Intersection == 7] <- '5_Point'
+
+# Replacing '10 with L
+trafficAccident2020.dt$Type_Of_Intersection[trafficAccident2020.dt$Type_Of_Intersection == 10] <- 'Y'
+
+# Checking
+trafficAccident2020.dt %>% 
+  group_by(Type_Of_Intersection) %>%
+  summarise(no_rows = length(Type_Of_Intersection), percentage = length(Type_Of_Intersection)/nrow(trafficAccident2020.dt) * 100)
 
 #===============================#
 # CLEANING 38. Location_Of_Crash
@@ -799,7 +858,7 @@ trafficAccident2020.dt %>%
   summarise(no_rows = length(Location_Of_Crash), percentage = length(Location_Of_Crash)/nrow(trafficAccident2020.dt) * 100)
 
 # Low amount of unknowns, we will simply replace them  with the mode here
-nrow(trafficAccident2020.dt[Location_Of_Crash %in% c(11,98,99), ])/nrow(trafficAccident2020.dt) * 100
+nrow(trafficAccident2020.dt[Location_Of_Crash %in% c(98,99), ])/nrow(trafficAccident2020.dt) * 100
 
 # Replacing '1', '11', '98','99' with On_Roadway
 trafficAccident2020.dt$Location_Of_Crash[trafficAccident2020.dt$Location_Of_Crash %in% c(1,11,98,99)] <- 'On_Roadway'
