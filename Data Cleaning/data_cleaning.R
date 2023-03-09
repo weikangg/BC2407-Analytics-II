@@ -37,7 +37,7 @@ setnames(trafficAccident2020.dt, c('AGE', 'SEX', 'PER_TYP', 'INJ_SEV', 'SEAT_POS
                                    'DRDISTRACT', 'DRIVERRF', 'DAY', 'MONTH', 'DAY_WEEK', 'HOUR', 'HARM_EV', 'RELJCT2', 'TYP_INT', 'REL_ROAD', 'LGT_COND', 'WEATHER', 'Fatality Rate (%)'), 
                                  c('Age', 'Sex', 'Person_Type', 'Injury_Severity', 'Seat_Position', 'Restraint_Equipment_Usage', 'Airbag', 'Drugs', 'Non_Motorist_Location', 'Num_Of_Occupants',
                                    'Hit_And_Run', 'Owner_Type', 'Vehicle_Configuration', 'Hazardous_Mat_Involvement', 'Travel_Speed', 'Driver_Height', 'Driver_Weight', 'Previous_Speed_Convictions',
-                                   'Speeding_Related','Trafficway_Flow', 'Num_of_Lanes', 'Roadway_Profile', 'Pavement_Type', 'Roadway_Surface_Condition','Pre_Crash_Activity', 'Critical_Activity',
+                                   'Speeding_Related','Trafficway_Flow', 'Num_Of_Lanes', 'Roadway_Profile', 'Pavement_Type', 'Roadway_Surface_Condition','Pre_Crash_Activity', 'Critical_Activity',
                                    'Drinking', 'Vehicle_Classification', 'Driver_Distracted', 'Driver_Factors', 'Day','Month', 'Day_Of_Week', 'Hour', 'Harmful_Event','Relation_To_Junction', 'Type_Of_Intersection',
                                    'Location_Of_Crash', 'Light_Condition', 'Weather','Fatality_Rate'))
 
@@ -426,86 +426,6 @@ trafficAccident2020.dt %>%
   group_by(Hazardous_Mat_Involvement) %>%
   summarise(no_rows = length(Hazardous_Mat_Involvement), percentage = length(Hazardous_Mat_Involvement)/nrow(trafficAccident2020.dt) * 100)
 
-
-#==========================#
-# CLEANING 15. Travel_Speed
-#==========================#
-
-summary(trafficAccident2020.dt$Travel_Speed)
-
-trafficAccident2020.dt[Travel_Speed == 997, ] # 2 INCIDENCES > 151mph
-trafficAccident2020.dt[Travel_Speed == 998, ] # 10919 INCIDENCES Not reported
-trafficAccident2020.dt[Travel_Speed == 999, ] # 2156 INCIDENCES reported as unknown
-
-# 64% of rows
-nrow(trafficAccident2020.dt[Travel_Speed %in% c(998,999), ])/nrow(trafficAccident2020.dt) * 100
-
-# Getting median of remaining rows
-median_Travel_Speed <- median(trafficAccident2020.dt$Travel_Speed[which(trafficAccident2020.dt$Travel_Speed %!in% c(997,998,999))])
-median_Travel_Speed
-
-# Replacing travel speed of '997' with median since this means that the vehicle was travelling at > 243 km/h which is quite unrealistic in Singapore.
-trafficAccident2020.dt$Travel_Speed[which(trafficAccident2020.dt$Travel_Speed %in% c(997,998,999))] <- median_Travel_Speed
-
-# Convert to km/h
-speed_converter <- function(x){
-  return (1.60934 * x)
-}
-
-b <- c('Travel_Speed')
-trafficAccident2020.dt[, (b) := lapply(.SD, speed_converter), .SDcols = b]
-summary(trafficAccident2020.dt$Travel_Speed)
-
-#===========================#
-# CLEANING 16. Driver_Height
-#===========================#
-
-
-summary(trafficAccident2020.dt$Driver_Height)
-nrow(trafficAccident2020.dt[Driver_Height == 998, ]) # 24 INCIDENCES no driver present
-nrow(trafficAccident2020.dt[Driver_Height == 999, ]) # 4821 INCIDENCES unknown height
-trafficAccident2020.dt[Driver_Height >= 24 & Driver_Height <= 107, ]
-
-
-# Convert to metre
-height_converter <- function(x){
-  return (x/39.37)
-}
-
-b <- c('Driver_Height')
-trafficAccident2020.dt[, (b) := lapply(.SD, height_converter), .SDcols = b]
-
-summary(trafficAccident2020.dt$Driver_Height)
-
-#===========================#
-# CLEANING 17. Driver_Weight
-#===========================#
-
-summary(trafficAccident2020.dt$Driver_Weight)
-nrow(trafficAccident2020.dt[Driver_Weight == 997, ]) # 24 INCIDENCES no driver present
-nrow(trafficAccident2020.dt[Driver_Weight == 998, ]) # 0 INCIDENCES others
-nrow(trafficAccident2020.dt[Driver_Weight == 999, ]) # 9323 INCIDENCES unknown
-trafficAccident2020.dt[Driver_Weight >= 40 & Driver_Weight <= 700, ]
-
-
-# Convert to kg
-weight_converter <- function(x){
-  return (x/2.205)
-}
-
-b <- c('Driver_Weight')
-trafficAccident2020.dt[, (b) := lapply(.SD, weight_converter), .SDcols = b]
-
-summary(trafficAccident2020.dt$Driver_Weight)
-
-#========================================#
-# CLEANING 18. Previous_Speed_Convictions
-#========================================#
-
-summary(trafficAccident2020.dt$Driver_Weight)
-nrow(trafficAccident2020.dt[Previous_Speed_Convictions == 99, ]) # 1806 INCIDENCES Unknown
-nrow(trafficAccident2020.dt[Previous_Speed_Convictions == 998, ]) # 24 INCIDENCES others
-
 #==============================#
 # CLEANING 19. Speeding_Related
 #==============================#
@@ -529,19 +449,211 @@ trafficAccident2020.dt %>%
   group_by(Speeding_Related) %>%
   summarise(no_rows = length(Speeding_Related), percentage = length(Speeding_Related)/nrow(trafficAccident2020.dt) * 100)
 
+#==========================#
+# CLEANING 15. Travel_Speed
+#==========================#
+
+summary(trafficAccident2020.dt$Travel_Speed)
+
+trafficAccident2020.dt[Travel_Speed == 0, ] # 158 INCIDENCES == 0 mph
+trafficAccident2020.dt[Travel_Speed == 997, ] # 2 INCIDENCES > 151mph
+trafficAccident2020.dt[Travel_Speed == 998, ] # 10919 INCIDENCES Not reported
+trafficAccident2020.dt[Travel_Speed == 999, ] # 2156 INCIDENCES reported as unknown
+
+# 64% of rows
+nrow(trafficAccident2020.dt[Travel_Speed %in% c(998,999), ])/nrow(trafficAccident2020.dt) * 100
+
+# Methodology: IF that particular row is associated with speeding_related cases, then , we replace the 'unknown' travel speed with median speed of speeding_related
+# Else: We replace the 'unknown' travel speed with median of not speeding cases
+
+# Getting median travelling speed of all rows where speed is known
+median_Travel_Speed <-  median(trafficAccident2020.dt$Travel_Speed[which(trafficAccident2020.dt$Travel_Speed %!in% c(997,998,999))])
+median_Travel_Speed
+
+# Getting median of speeding_related cases where the travel speed is known
+median_Travel_Speed_Speeding <- median(trafficAccident2020.dt$Travel_Speed[which(trafficAccident2020.dt$Speeding_Related == 'Yes' & trafficAccident2020.dt$Travel_Speed %!in% c(998,999))])
+median_Travel_Speed_Speeding
+
+# Getting median of not speeding_related cases where the travel speed is known
+median_Travel_Speed_NotSpeeding <- median(trafficAccident2020.dt$Travel_Speed[which(trafficAccident2020.dt$Speeding_Related == 'No' & trafficAccident2020.dt$Travel_Speed %!in% c(998,999))])
+median_Travel_Speed_NotSpeeding
+
+# Replacing travel speed of '997' with median since this means that the vehicle was travelling at > 243 km/h which is quite unrealistic in Singapore.
+trafficAccident2020.dt$Travel_Speed[which(trafficAccident2020.dt$Travel_Speed == 997)] <- median_Travel_Speed
+
+# Replacing rows with unknown travel_Speed, and are tagged as speeding_related
+trafficAccident2020.dt$Travel_Speed[which(trafficAccident2020.dt$Speeding_Related == 'Yes' & trafficAccident2020.dt$Travel_Speed %in% c(998,999))] <- median_Travel_Speed_Speeding
+
+# Replacing rows with unknown travel_Speed and are tagged as NOT speeding_related
+trafficAccident2020.dt$Travel_Speed[which(trafficAccident2020.dt$Speeding_Related == 'No' & trafficAccident2020.dt$Travel_Speed %in% c(998,999))] <- median_Travel_Speed_NotSpeeding
+
+
+# Convert to km/h
+speed_converter <- function(x){
+  return (1.60934 * x)
+}
+
+b <- c('Travel_Speed')
+trafficAccident2020.dt[, (b) := lapply(.SD, speed_converter), .SDcols = b]
+
+# Checking
+summary(trafficAccident2020.dt$Travel_Speed)
+trafficAccident2020.dt[Travel_Speed == 997, ] # 2 INCIDENCES > 151mph
+trafficAccident2020.dt[Travel_Speed == 998, ] # 10919 INCIDENCES Not reported
+trafficAccident2020.dt[Travel_Speed == 999, ] # 2156 INCIDENCES reported as unknown
+
+#===========================#
+# CLEANING 16. Driver_Height
+#===========================#
+
+
+summary(trafficAccident2020.dt$Driver_Height)
+
+# 23% of rows where height is unknown
+nrow(trafficAccident2020.dt[Driver_Height %in% c(998,999), ])/nrow(trafficAccident2020.dt) * 100
+
+
+# Convert to metre
+height_converter <- function(x){
+  return (x/39.37)
+}
+
+b <- c('Driver_Height')
+trafficAccident2020.dt[, (b) := lapply(.SD, height_converter), .SDcols = b]
+
+summary(trafficAccident2020.dt$Driver_Height)
+
+#===========================#
+# CLEANING 17. Driver_Weight
+#===========================#
+
+summary(trafficAccident2020.dt$Driver_Weight)
+
+# 46% of rows unknown
+nrow(trafficAccident2020.dt[Driver_Weight %in% c(997,998,999), ])/nrow(trafficAccident2020.dt) * 100
+
+
+# Convert to kg
+weight_converter <- function(x){
+  return (x/2.205)
+}
+
+b <- c('Driver_Weight')
+trafficAccident2020.dt[, (b) := lapply(.SD, weight_converter), .SDcols = b]
+
+summary(trafficAccident2020.dt$Driver_Weight)
+
+#========================================#
+# CLEANING 18. Previous_Speed_Convictions
+#========================================#
+
+summary(trafficAccident2020.dt$Previous_Speed_Convictions)
+
+# Getting no of values and percentage for each level
+trafficAccident2020.dt %>% 
+  group_by(Previous_Speed_Convictions) %>%
+  summarise(no_rows = length(Previous_Speed_Convictions), percentage = length(Previous_Speed_Convictions)/nrow(trafficAccident2020.dt) * 100)
+
+
+# 9%, replacing with median
+nrow(trafficAccident2020.dt[Previous_Speed_Convictions %in% c(99,998), ])/nrow(trafficAccident2020.dt) * 100
+
+# Getting median Previous_Speed_Convictions speed of all rows where amount of prev spd convictions is known
+median_Prev_Spd_Convictions <-  median(trafficAccident2020.dt$Previous_Speed_Convictions[which(trafficAccident2020.dt$Previous_Speed_Convictions %!in% c(99,998))])
+median_Prev_Spd_Convictions
+
+# Replacing '99' and '998' with median
+trafficAccident2020.dt$Previous_Speed_Convictions[which(trafficAccident2020.dt$Previous_Speed_Convictions %in% c(99,998))] <- median_Prev_Spd_Convictions
+
+# Checking
+trafficAccident2020.dt %>% 
+  group_by(Previous_Speed_Convictions) %>%
+  summarise(no_rows = length(Previous_Speed_Convictions), percentage = length(Previous_Speed_Convictions)/nrow(trafficAccident2020.dt) * 100)
+
+
 #=============================#
 # CLEANING 20. Trafficway_Flow
 #=============================#
+  
+# Getting no of values and percentage for each level
+trafficAccident2020.dt %>% 
+  group_by(Trafficway_Flow) %>%
+  summarise(no_rows = length(Trafficway_Flow), percentage = length(Trafficway_Flow)/nrow(trafficAccident2020.dt) * 100)
 
+# 0.8% of rows, can replace with the mode, which is 2 way not divided
+nrow(trafficAccident2020.dt[Trafficway_Flow %in% c(8,9), ])/nrow(trafficAccident2020.dt) * 100
 
+# Replacing '0', '4', '6' with Others
+trafficAccident2020.dt$Trafficway_Flow[trafficAccident2020.dt$Trafficway_Flow %in% c(0,4,6)] <- 'Others'
+
+# Replacing '1','5', '8','9' with 2_Way_Not_Divided
+trafficAccident2020.dt$Trafficway_Flow[trafficAccident2020.dt$Trafficway_Flow %in% c(1,5,8,9)] <- '2_Way_Not_Divided'
+
+# Replacing '2' with 2_Way_Divided_Unprotected
+trafficAccident2020.dt$Trafficway_Flow[trafficAccident2020.dt$Trafficway_Flow == 2] <- '2_Way_Divided_Unprotected'
+
+# Replacing '3' with 2_Way_Divided_Protected
+trafficAccident2020.dt$Trafficway_Flow[trafficAccident2020.dt$Trafficway_Flow == 3] <- '2_Way_Divided_Protected'
+
+# Checking
+trafficAccident2020.dt %>% 
+  group_by(Trafficway_Flow) %>%
+  summarise(no_rows = length(Trafficway_Flow), percentage = length(Trafficway_Flow)/nrow(trafficAccident2020.dt) * 100)
 
 #==========================#
 # CLEANING 21. Num_Of_Lanes
 #==========================#
 
+# Getting no of values and percentage for each level
+trafficAccident2020.dt %>% 
+  group_by(Num_Of_Lanes) %>%
+  summarise(no_rows = length(Num_Of_Lanes), percentage = length(Num_Of_Lanes)/nrow(trafficAccident2020.dt) * 100)
+
+# 1.3% of data, can replace with mode, which is 2 lanes
+nrow(trafficAccident2020.dt[Num_Of_Lanes %in% c(8,9), ])/nrow(trafficAccident2020.dt) * 100
+
+# Replacing '0' with '1'
+trafficAccident2020.dt$Num_Of_Lanes[trafficAccident2020.dt$Num_Of_Lanes == 0] <- 1
+
+# Replacing '6' and '7' with '5'
+trafficAccident2020.dt$Num_Of_Lanes[trafficAccident2020.dt$Num_Of_Lanes %in% c(6,7)] <- 5
+
+# Replacing '8' and '9' with '2'
+trafficAccident2020.dt$Num_Of_Lanes[trafficAccident2020.dt$Num_Of_Lanes %in% c(8,9)] <- 2
+
+# Checking
+trafficAccident2020.dt %>% 
+  group_by(Num_Of_Lanes) %>%
+  summarise(no_rows = length(Num_Of_Lanes), percentage = length(Num_Of_Lanes)/nrow(trafficAccident2020.dt) * 100)
+
 #=============================#
 # CLEANING 22. Roadway_Profile
 #=============================#
+
+# Getting no of values and percentage for each level
+trafficAccident2020.dt %>% 
+  group_by(Roadway_Profile) %>%
+  summarise(no_rows = length(Roadway_Profile), percentage = length(Roadway_Profile)/nrow(trafficAccident2020.dt) * 100)
+
+# ~ 11% of unknowns, hence we will choose not to replace with mode, but instead create a separate "Unknown category"
+nrow(trafficAccident2020.dt[Roadway_Profile %in% c(8,9), ])/nrow(trafficAccident2020.dt) * 100
+
+# Replacing 0, 3, 4 with Others
+trafficAccident2020.dt$Roadway_Profile[trafficAccident2020.dt$Roadway_Profile %in% c(0,3,4)] <- 'Others'
+
+# Replacing 1 with Level
+trafficAccident2020.dt$Roadway_Profile[trafficAccident2020.dt$Roadway_Profile == 1] <- 'Level'
+
+# Replacing 2, 5, 6  with Grade
+trafficAccident2020.dt$Roadway_Profile[trafficAccident2020.dt$Roadway_Profile %in% c(2,5,6)] <- 'Grade'
+
+# Replacing 8,9 with Unknown
+trafficAccident2020.dt$Roadway_Profile[trafficAccident2020.dt$Roadway_Profile %in% c(8,9)] <- 'Unknown'
+
+# Checking
+trafficAccident2020.dt %>% 
+  group_by(Roadway_Profile) %>%
+  summarise(no_rows = length(Roadway_Profile), percentage = length(Roadway_Profile)/nrow(trafficAccident2020.dt) * 100)
 
 #===========================#
 # CLEANING 23. Pavement_Type
@@ -563,6 +675,23 @@ trafficAccident2020.dt %>%
 # CLEANING 27. Drinking
 #========================#
 
+# Getting no of values and percentage for each level
+trafficAccident2020.dt %>% 
+  group_by(Drinking) %>%
+  summarise(no_rows = length(Drinking), percentage = length(Drinking)/nrow(trafficAccident2020.dt) * 100)
+
+# Replacing '0' with No
+trafficAccident2020.dt$Drinking[trafficAccident2020.dt$Drinking == 0] <- 'No'
+
+# Replacing '1' with Yes
+trafficAccident2020.dt$Drinking[trafficAccident2020.dt$Drinking == 1] <- 'Yes'
+
+# Checking
+trafficAccident2020.dt %>% 
+  group_by(Drinking) %>%
+  summarise(no_rows = length(Drinking), percentage = length(Drinking)/nrow(trafficAccident2020.dt) * 100)
+
+
 #====================================#
 # CLEANING 28. Vehicle_Classification
 #====================================#
@@ -579,17 +708,53 @@ trafficAccident2020.dt %>%
 # CLEANING 31. Day
 #========================#
 
+# Getting no of values and percentage for each level
+print(n=31, trafficAccident2020.dt %>% 
+  group_by(Day) %>%
+  summarise(no_rows = length(Day), percentage = length(Day)/nrow(trafficAccident2020.dt) * 100))
+
+# Nothing to clean, all good.
+
 #========================#
 # CLEANING 32. Month
 #========================#
+
+# Getting no of values and percentage for each level
+print(n=12, trafficAccident2020.dt %>% 
+        group_by(Month) %>%
+        summarise(no_rows = length(Month), percentage = length(Day)/nrow(trafficAccident2020.dt) * 100))
+
+# Nothing to clean, all good
 
 #=========================#
 # CLEANING 33. Day_Of_Week
 #=========================#
 
+# Getting no of values and percentage for each level
+print(n=12, trafficAccident2020.dt %>% 
+        group_by(Day_Of_Week) %>%
+        summarise(no_rows = length(Day_Of_Week), percentage = length(Day_Of_Week)/nrow(trafficAccident2020.dt) * 100))
+
+# Nothing to clean, all good
+
 #========================#
 # CLEANING 34. Hour
 #========================#
+
+# Getting no of values and percentage for each level
+print(n=25, trafficAccident2020.dt %>% 
+        group_by(Hour) %>%
+        summarise(no_rows = length(Hour), percentage = length(Hour)/nrow(trafficAccident2020.dt) * 100))
+
+# 0.5% of data unknown, replace with mode (9pm).
+
+# Replacing '99' with '21'.
+trafficAccident2020.dt$Hour[trafficAccident2020.dt$Hour == 99] <- 21
+
+# Checking
+print(n=25, trafficAccident2020.dt %>% 
+        group_by(Hour) %>%
+        summarise(no_rows = length(Hour), percentage = length(Hour)/nrow(trafficAccident2020.dt) * 100))
 
 #===========================#
 # CLEANING 35. Harmful_Event
@@ -611,17 +776,55 @@ trafficAccident2020.dt %>%
 # CLEANING 39. Light_Condition
 #=============================#
 
+# Getting no of values and percentage for each level
+trafficAccident2020.dt %>% 
+  group_by(Light_Condition) %>%
+  summarise(no_rows = length(Light_Condition), percentage = length(Light_Condition)/nrow(trafficAccident2020.dt) * 100)
+
+# 0.306% of rows of data, can replace with the mode, which is high_lighting  in this case
+nrow(trafficAccident2020.dt[Light_Condition %in% c(7,8,9), ])/nrow(trafficAccident2020.dt) * 100
+
+# Replacing '1', '7','8', '9' with High_Light
+trafficAccident2020.dt$Light_Condition[trafficAccident2020.dt$Light_Condition %in% c(1,7,8,9)] <- 'High_Light'
+
+# Replacing '2' with Low_Light
+trafficAccident2020.dt$Light_Condition[trafficAccident2020.dt$Light_Condition == 2] <- 'Low_Light'
+
+# Replacing '3','4','5' '6' with Medium_Light
+trafficAccident2020.dt$Light_Condition[trafficAccident2020.dt$Light_Condition %in% c(3,4,5,6)] <- 'Medium_Light'
+
+# Checking
+trafficAccident2020.dt %>% 
+  group_by(Light_Condition) %>%
+  summarise(no_rows = length(Light_Condition), percentage = length(Light_Condition)/nrow(trafficAccident2020.dt) * 100)
+
 #========================#
 # CLEANING 40. Weather
 #========================#
+
+# Getting no of values and percentage for each level
+trafficAccident2020.dt %>% 
+  group_by(Weather) %>%
+  summarise(no_rows = length(Weather), percentage = length(Weather)/nrow(trafficAccident2020.dt) * 100)
+
+# Getting % of data for weather conditions which are not applicable in singapore/ not reported/reported as unknown
+# ~ 7 %, can be replaced with mode.
+nrow(trafficAccident2020.dt[Weather %in% c(3,4,6,7,8,11,98,99), ])/nrow(trafficAccident2020.dt) * 100
+
+
 
 #===========================#
 # CLEANING 41. Fatality_Rate
 #===========================#
 
+#==================================================================================================================================#
+#                                                       END OF DATA CLEANING                                                       #
+#==================================================================================================================================#
+
+
 # Factorise Categorical Columns
 cols <- c("Sex", "Person_Type", "Injury_Severity", "Seat_Position",'Restraint_Equipment_Usage', 'Airbag', 'Drugs', 'Non_Motorist_Location', 'Hit_And_Run', 'Owner_Type', 'Vehicle_Configuration',
-          'Hazardous_Mat_Involvement', 'Speeding_Related','Trafficway_Flow', 'Num_of_Lanes', 'Roadway_Profile', 'Pavement_Type', 'Roadway_Surface_Condition', 'Pre_Crash_Activity', 'Critical_Activity',
+          'Hazardous_Mat_Involvement', 'Speeding_Related','Trafficway_Flow', 'Num_Of_Lanes', 'Roadway_Profile', 'Pavement_Type', 'Roadway_Surface_Condition', 'Pre_Crash_Activity', 'Critical_Activity',
           'Drinking', 'Vehicle_Classification', 'Driver_Distracted', 'Driver_Factors', 'Day', 'Month', 'Day_Of_Week', 'Hour', 'Harmful_Event', 'Relation_To_Junction', 'Type_Of_Intersection', 'Location_Of_Crash',
           'Light_Condition', 'Weather')
 setDT(trafficAccident2020.dt)[, (cols):= lapply(.SD, factor), .SDcols=cols]
