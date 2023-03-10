@@ -672,17 +672,148 @@ trafficAccident2020.dt %>%
 # CLEANING 23. Pavement_Type
 #===========================#
 
+# Getting no of values and percentage for each level
+trafficAccident2020.dt %>% 
+  group_by(Pavement_Type) %>%
+  summarise(no_rows = length(Pavement_Type), percentage = length(Pavement_Type)/nrow(trafficAccident2020.dt) * 100)
+
+# ~ 30% of unknowns, hence we will choose not to replace with mode, but instead create a separate "Unknown category"
+nrow(trafficAccident2020.dt[Pavement_Type %in% c(8,9), ])/nrow(trafficAccident2020.dt) * 100
+
+# Replacing 0,3,4,5,7 with Others by merging these columns together
+trafficAccident2020.dt$Pavement_Type[trafficAccident2020.dt$Pavement_Type %in% c(0,3,4,5,7)] <- 'Others'
+
+# Replace 1 with Concrete
+trafficAccident2020.dt$Pavement_Type[trafficAccident2020.dt$Pavement_Type  == 1] <- 'Concrete'
+
+# Replace 2 with Blacktop_Bituminous_Asphalt
+trafficAccident2020.dt$Pavement_Type[trafficAccident2020.dt$Pavement_Type  == 2] <- 'Blacktop_Bituminous_Asphalt'
+
+# Replace '8' and '9' with Unknown
+trafficAccident2020.dt$Pavement_Type[trafficAccident2020.dt$Pavement_Type %in% c(8,9)] <- 'Unknown'
+
+# Checking
+trafficAccident2020.dt %>% 
+  group_by(Pavement_Type) %>%
+  summarise(no_rows = length(Pavement_Type), percentage = length(Pavement_Type)/nrow(trafficAccident2020.dt) * 100)
+
 #=======================================#
 # CLEANING 24. Roadway_Surface_Condition
 #=======================================#
+
+# Getting no of values and percentage for each level
+trafficAccident2020.dt %>% 
+  group_by(Roadway_Surface_Condition) %>%
+  summarise(no_rows = length(Roadway_Surface_Condition), percentage = length(Roadway_Surface_Condition)/nrow(trafficAccident2020.dt) * 100)
+
+# < 2% of unknowns, relatively low number of unknowns, we choose to replace them with the mode
+nrow(trafficAccident2020.dt[Roadway_Surface_Condition %in% c(98,99), ])/nrow(trafficAccident2020.dt) * 100
+
+# Replace '0', '3','4','5','6','7','8','10','11' with Others
+trafficAccident2020.dt$Roadway_Surface_Condition[trafficAccident2020.dt$Roadway_Surface_Condition %in% c(0,3,4,5,6,7,8,10,11)] <- 'Others'
+
+# Replace '1', '98','99' with Dry, replace with mode since low amount of unknowns
+trafficAccident2020.dt$Roadway_Surface_Condition[trafficAccident2020.dt$Roadway_Surface_Condition %in% c(1,98,99)] <- 'Dry'
+
+# Replace '2' with Wet
+trafficAccident2020.dt$Roadway_Surface_Condition[trafficAccident2020.dt$Roadway_Surface_Condition == 2] <- 'Wet'
+
+# Checking
+trafficAccident2020.dt %>% 
+  group_by(Roadway_Surface_Condition) %>%
+  summarise(no_rows = length(Roadway_Surface_Condition), percentage = length(Roadway_Surface_Condition)/nrow(trafficAccident2020.dt) * 100)
 
 #================================#
 # CLEANING 25. Pre_Crash_Activity
 #================================#
 
+# Getting no of values and percentage for each level
+trafficAccident2020.dt %>% 
+  group_by(Pre_Crash_Activity) %>%
+  summarise(no_rows = length(Pre_Crash_Activity), percentage = length(Pre_Crash_Activity)/nrow(trafficAccident2020.dt) * 100)
+
+# < 3% of unknowns, relatively low number of unknowns, we choose to replace them with the mode
+nrow(trafficAccident2020.dt[Pre_Crash_Activity == 99, ])/nrow(trafficAccident2020.dt) * 100
+
+# Replacing '0','2','3','4','5',7','8','9','12','13','16','17','98' with Others
+trafficAccident2020.dt$Pre_Crash_Activity[trafficAccident2020.dt$Pre_Crash_Activity %in% c(0,2,3,4,5,7,8,9,12,13,16,17,98)] <- 'Others'
+
+# Replacing '1', '99' with Going_Straight
+trafficAccident2020.dt$Pre_Crash_Activity[trafficAccident2020.dt$Pre_Crash_Activity %in% c(1,99)] <- 'Going_Straight'
+
+# Replacing '6' with Overtaking_Vehicle
+trafficAccident2020.dt$Pre_Crash_Activity[trafficAccident2020.dt$Pre_Crash_Activity == 6] <- 'Overtaking_Vehicle'
+
+# Replacing '10', '11' with Turning
+trafficAccident2020.dt$Pre_Crash_Activity[trafficAccident2020.dt$Pre_Crash_Activity %in% c(10,11)] <- 'Turning'
+
+# Replacing '14' with Negotiating_Curve
+trafficAccident2020.dt$Pre_Crash_Activity[trafficAccident2020.dt$Pre_Crash_Activity == 14] <- 'Negotiating_Curve'
+
+# Replacing '15' with Changing_Lanes
+trafficAccident2020.dt$Pre_Crash_Activity[trafficAccident2020.dt$Pre_Crash_Activity == 15] <- 'Changing_Lanes'
+
+# Checking
+trafficAccident2020.dt %>% 
+  group_by(Pre_Crash_Activity) %>%
+  summarise(no_rows = length(Pre_Crash_Activity), percentage = length(Pre_Crash_Activity)/nrow(trafficAccident2020.dt) * 100)
+
+
 #===============================#
 # CLEANING 26. Critical_Activity
 #===============================#
+
+# Getting no of values and percentage for each level
+print(n=57,trafficAccident2020.dt %>% 
+  group_by(Critical_Activity) %>%
+  summarise(no_rows = length(Critical_Activity), percentage = length(Critical_Activity)/nrow(trafficAccident2020.dt) * 100))
+
+# 1% of unknowns, can just replace with the mode
+nrow(trafficAccident2020.dt[Critical_Activity == 99, ])/nrow(trafficAccident2020.dt) * 100
+
+# Getting the mode of the column
+mode(trafficAccident2020.dt$Critical_Activity)
+
+# Replacing '1','2','3','4','5','8,'9','12,'13','18','19','20','21','55','56','59','60','61','64','70','71','72','73','74','78','87','88','89','90','91','92','98' with Others
+trafficAccident2020.dt$Critical_Activity[trafficAccident2020.dt$Critical_Activity %in% c(1,2,3,4,5,8,9,12,13,18,19,20,21,55,56,59,60,61,64,70,71,72,73,74,78,87,88,89,90,91,92,98)] <- 'Others'
+
+# Replacing '6' with High_Speed
+trafficAccident2020.dt$Critical_Activity[trafficAccident2020.dt$Critical_Activity == 6] <- 'High_Speed'
+
+# Replacing '10', '11' with Over_Lane_Line
+trafficAccident2020.dt$Critical_Activity[trafficAccident2020.dt$Critical_Activity %in% c(10,11)] <- 'Over_Lane_Line'
+
+# Replacing '14' with End_Departure
+trafficAccident2020.dt$Critical_Activity[trafficAccident2020.dt$Critical_Activity == 14] <- 'End_Departure'
+
+# Replacing '15' , '16' with Turning
+trafficAccident2020.dt$Critical_Activity[trafficAccident2020.dt$Critical_Activity %in% c(15,16)] <- 'Turning'
+
+# Replacing '17' with Crossing_Intersection
+trafficAccident2020.dt$Critical_Activity[trafficAccident2020.dt$Critical_Activity == 17] <- 'Crossing_Intersection'
+
+# Replacing '50' with Other_Vehicle_Stopped
+trafficAccident2020.dt$Critical_Activity[trafficAccident2020.dt$Critical_Activity == 50] <- 'Other_Vehicle_Stopped'
+
+# Replacing '51' and '52' with Same_Direction_LowerSpeed
+trafficAccident2020.dt$Critical_Activity[trafficAccident2020.dt$Critical_Activity %in% c(51,52)] <- 'Same_Direction_LowerSpeed'
+
+# Replacing '53' with Same_Direction_HigherSpeed
+trafficAccident2020.dt$Critical_Activity[trafficAccident2020.dt$Critical_Activity == 53] <- 'Same_Direction_HigherSpeed'
+
+# Replacing '54','62','63' with Opposite_Direction
+trafficAccident2020.dt$Critical_Activity[trafficAccident2020.dt$Critical_Activity %in% c(54,62,63)] <- 'Opposite_Direction'
+
+# Replacing '65','66','67','68' with Crossing_Street
+trafficAccident2020.dt$Critical_Activity[trafficAccident2020.dt$Critical_Activity %in% c(65,66,67,68)] <- 'Crossing_Street'
+
+# Replacing '80','81','82','83','84','85' with Non_Motorists
+trafficAccident2020.dt$Critical_Activity[trafficAccident2020.dt$Critical_Activity %in% c(80,81,82,83,84,85,99)] <- 'Non_Motorists'
+
+# Checking
+print(n=57,trafficAccident2020.dt %>% 
+        group_by(Critical_Activity) %>%
+        summarise(no_rows = length(Critical_Activity), percentage = length(Critical_Activity)/nrow(trafficAccident2020.dt) * 100))
 
 #========================#
 # CLEANING 27. Drinking
@@ -709,13 +840,160 @@ trafficAccident2020.dt %>%
 # CLEANING 28. Vehicle_Classification
 #====================================#
 
+# Getting no of values and percentage for each level
+print(n=57,trafficAccident2020.dt %>% 
+  group_by(Vehicle_Classification) %>%
+  summarise(no_rows = length(Vehicle_Classification), percentage = length(Vehicle_Classification)/nrow(trafficAccident2020.dt) * 100))
+
+# 4% of unknowns, can just replace with the mode
+nrow(trafficAccident2020.dt[Vehicle_Classification %in% c(997,998,999), ])/nrow(trafficAccident2020.dt) * 100
+
+# Getting the mode of the column
+mode(trafficAccident2020.dt$Vehicle_Classification)
+
+# Replacing '1' with Convertible
+trafficAccident2020.dt$Vehicle_Classification[trafficAccident2020.dt$Vehicle_Classification == 1] <- 'Convertible'
+
+# Replacing '2' with Minivan
+trafficAccident2020.dt$Vehicle_Classification[trafficAccident2020.dt$Vehicle_Classification == 2] <- 'Minivan'
+
+# Replacing '3' with Coupe
+trafficAccident2020.dt$Vehicle_Classification[trafficAccident2020.dt$Vehicle_Classification == 3] <- 'Coupe'
+
+# Replacing '4','6','8','9','10','15','16','62','63','64','65','67','70','71','73','74','78','95','108','111','119','996','997' with Others
+trafficAccident2020.dt$Vehicle_Classification[trafficAccident2020.dt$Vehicle_Classification %in% c(4,6,8,9,10,15,16,62,63,64,65,67,70,71,73,74,78,95,108,111,119,996,997)] <- 'Others'
+
+# Replacing '5' with Hatch_Lift_Notch
+trafficAccident2020.dt$Vehicle_Classification[trafficAccident2020.dt$Vehicle_Classification == 5] <- 'Hatch_Lift_Notch'
+
+# Replacing '7' with SUV_MPV
+trafficAccident2020.dt$Vehicle_Classification[trafficAccident2020.dt$Vehicle_Classification == 7] <- 'SUV_MPV'
+
+# Replacing '11' with Truck
+trafficAccident2020.dt$Vehicle_Classification[trafficAccident2020.dt$Vehicle_Classification == 11] <- 'Truck'
+
+# Replacing '12','80','81','82','83','85','87','90,'94','98','103','104','114','125' with Motorcycle
+trafficAccident2020.dt$Vehicle_Classification[trafficAccident2020.dt$Vehicle_Classification %in% c(12,80,81,82,83,85,87,90,94,98,103,104,114,125)] <- 'Others'
+
+# Replacing '13' with Sedan_Saloon
+trafficAccident2020.dt$Vehicle_Classification[trafficAccident2020.dt$Vehicle_Classification == 13] <- 'Sedan_Saloon'
+
+# Replacing '60' with Pickup
+trafficAccident2020.dt$Vehicle_Classification[trafficAccident2020.dt$Vehicle_Classification == 60] <- 'Pickup'
+
+# Replacing '66' with Truck_Tractor
+trafficAccident2020.dt$Vehicle_Classification[trafficAccident2020.dt$Vehicle_Classification == 66] <- 'Truck_Tractor'
+
+# Replacing '69','84','86','88','97','105','113','124','126','127' with Off_Road_Vehicle
+trafficAccident2020.dt$Vehicle_Classification[trafficAccident2020.dt$Vehicle_Classification %in% c(69,84,86,88,97,105,113,124,126,127)] <- 'Off_Road_Vehicle'
+
+
+# Replacing '998','999' with Sedan_Saloon (Mode)
+trafficAccident2020.dt$Vehicle_Classification[trafficAccident2020.dt$Vehicle_Classification %in% c(998,999)] <- 'Sedan_Saloon'
+
+# Checking
+print(n=57,trafficAccident2020.dt %>% 
+        group_by(Vehicle_Classification) %>%
+        summarise(no_rows = length(Vehicle_Classification), percentage = length(Vehicle_Classification)/nrow(trafficAccident2020.dt) * 100))
+
+
 #==============================#
 # CLEANING 29. Driver_Distracted
 #==============================#
 
+# Getting no of values and percentage for each level
+print(n=21,trafficAccident2020.dt %>% 
+  group_by(Driver_Distracted) %>%
+  summarise(no_rows = length(Driver_Distracted), percentage = length(Driver_Distracted)/nrow(trafficAccident2020.dt) * 100))
+
+# 16.5% of unknowns, cannot just replace with the mode, hence we will leave it as Unknown
+nrow(trafficAccident2020.dt[Driver_Distracted == 99, ])/nrow(trafficAccident2020.dt) * 100
+
+# Replacing '0' with Not_Distracted
+trafficAccident2020.dt$Driver_Distracted[trafficAccident2020.dt$Driver_Distracted == 0] <- 'Not_Distracted'
+
+# Replacing '3' with Other_Occupants
+trafficAccident2020.dt$Driver_Distracted[trafficAccident2020.dt$Driver_Distracted == 3] <- 'Other_Occupants'
+
+# Replacing '4','12' with External_Objects
+trafficAccident2020.dt$Driver_Distracted[trafficAccident2020.dt$Driver_Distracted %in% c(4,12)] <- 'External_Objects'
+
+# Replacing '5','6','7','9','10','15' with Device
+trafficAccident2020.dt$Driver_Distracted[trafficAccident2020.dt$Driver_Distracted %in% c(5,6,7,9,10,15)] <- 'Device'
+
+# Replacing '13','14','16' with Others
+trafficAccident2020.dt$Driver_Distracted[trafficAccident2020.dt$Driver_Distracted %in% c(13,14,16)] <- 'Others'
+
+# Replacing '17','19','92','93','97','98' with Distraction_Inattentive
+trafficAccident2020.dt$Driver_Distracted[trafficAccident2020.dt$Driver_Distracted %in% c(17,19,92,93,97,98)] <- 'Distraction_Inattentive'
+
+# Replacing '96' with Not_Reported
+trafficAccident2020.dt$Driver_Distracted[trafficAccident2020.dt$Driver_Distracted == 96] <- 'Not_Reported'
+
+# Replacing '99' with Unknown
+trafficAccident2020.dt$Driver_Distracted[trafficAccident2020.dt$Driver_Distracted == 99] <- 'Unknown'
+
+# Checking
+print(n=21,trafficAccident2020.dt %>% 
+        group_by(Driver_Distracted) %>%
+        summarise(no_rows = length(Driver_Distracted), percentage = length(Driver_Distracted)/nrow(trafficAccident2020.dt) * 100))
+
 #============================#
 # CLEANING 30. Driver_Factors
 #============================#
+
+# Getting no of values and percentage for each level
+print(n=63,trafficAccident2020.dt %>% 
+        group_by(Driver_Factors) %>%
+        summarise(no_rows = length(Driver_Factors), percentage = length(Driver_Factors)/nrow(trafficAccident2020.dt) * 100))
+
+# 5% of unknowns, can replace with the mode
+nrow(trafficAccident2020.dt[Driver_Factors == 999, ])/nrow(trafficAccident2020.dt) * 100
+
+# Replace '0', '45', '89', '999' with None
+trafficAccident2020.dt$Driver_Factors[trafficAccident2020.dt$Driver_Factors %in% c(0,45,89,999)] <- 'None'
+
+# Replace '4','32', '35', '54', '57','58', '60', '88' with negligence
+trafficAccident2020.dt$Driver_Factors[trafficAccident2020.dt$Driver_Factors %in% c(4,32,35,54,57,58,60,88)] <- 'Negligence'
+
+# Replace '6', '10', '20', '36', '59' with Careless
+trafficAccident2020.dt$Driver_Factors[trafficAccident2020.dt$Driver_Factors %in% c(6,10,20,36,59)] <- 'Careless'
+
+# Replace '8' with Road_Rage
+trafficAccident2020.dt$Driver_Factors[trafficAccident2020.dt$Driver_Factors == 8] <- 'Road_Rage'
+
+# Replace '13' with Mentally_Challenged
+trafficAccident2020.dt$Driver_Factors[trafficAccident2020.dt$Driver_Factors == 13] <- 'Mentally_Challenged'
+
+# Replace '16','37', '94','95','96' with Job_Related
+trafficAccident2020.dt$Driver_Factors[trafficAccident2020.dt$Driver_Factors %in% c(16,37,94,95,96)] <- 'Job_Related'
+
+# Replace '18', '19', '29' with Illegality
+trafficAccident2020.dt$Driver_Factors[trafficAccident2020.dt$Driver_Factors %in% c(18,19,29)] <- 'Illegality'
+
+
+# Replace '21','22','23','24','26','30','31','33','34',38','39','40','41','42','47','48','50','51','55','73','74' with Non_Compliance
+trafficAccident2020.dt$Driver_Factors[trafficAccident2020.dt$Driver_Factors %in% c(21,22,23,24,26,30,31,33,34,38,39,40,41,42,47,48,50,51,55,73,74)] <- 'Non_Compliance'
+
+# Replace '27','28' with Improper_Lane_Usage
+trafficAccident2020.dt$Driver_Factors[trafficAccident2020.dt$Driver_Factors %in% c(27,28)] <- 'Improper_Lane_Usage'
+
+# Replace '52','53' with Unfamiliarity
+trafficAccident2020.dt$Driver_Factors[trafficAccident2020.dt$Driver_Factors %in% c(52,53)] <- 'Unfamiliarity'
+
+# Replace '77', '78', '79' , '81', '82', '83', '84', '86', '87' with Road_Conditions
+trafficAccident2020.dt$Driver_Factors[trafficAccident2020.dt$Driver_Factors %in% c(77,78,79,81,82,83,84,86,87)] <- 'Road_Conditions'
+
+# Replace '80','85' with Unforeseen_Circumstances
+trafficAccident2020.dt$Driver_Factors[trafficAccident2020.dt$Driver_Factors %in% c(80,85)] <- 'Unforeseen_Circumstances'
+
+# Replace '91' with Violence
+trafficAccident2020.dt$Driver_Factors[trafficAccident2020.dt$Driver_Factors == 91] <- 'Violence'
+
+# Checking
+print(n=63,trafficAccident2020.dt %>% 
+        group_by(Driver_Factors) %>%
+        summarise(no_rows = length(Driver_Factors), percentage = length(Driver_Factors)/nrow(trafficAccident2020.dt) * 100))
 
 #========================#
 # CLEANING 31. Day
@@ -774,9 +1052,22 @@ print(n=25, trafficAccident2020.dt %>%
 #===========================#
 
 # Getting no of values and percentage for each level
-trafficAccident2020.dt %>% 
-  group_by(Relation_To_Junction) %>%
-  summarise(no_rows = length(Relation_To_Junction), percentage = length(Relation_To_Junction)/nrow(trafficAccident2020.dt) * 100)
+print(n=53,trafficAccident2020.dt %>% 
+  group_by(Harmful_Event) %>%
+  summarise(no_rows = length(Harmful_Event), percentage = length(Harmful_Event)/nrow(trafficAccident2020.dt) * 100))
+
+# Low amount of unknowns, we will simply replace them  with the mode here
+nrow(trafficAccident2020.dt[Harmful_Event %in% c(98,99), ])/nrow(trafficAccident2020.dt) * 100
+
+# Replacing '1' with Rollover
+trafficAccident2020.dt$Harmful_Event[trafficAccident2020.dt$Harmful_Event == 1] <- 'Rollover'
+
+# Replacing '2','3', '4','5' ,'6','7', '72' with Non_Collision
+trafficAccident2020.dt$Harmful_Event[trafficAccident2020.dt$Harmful_Event %in% c(2,3,4,5,6,7,72)] <- 'Non_Collision'
+
+# Replacing '8' with Pedestrian
+trafficAccident2020.dt$Harmful_Event[trafficAccident2020.dt$Harmful_Event == 8] <- 'Pedestrian'
+
 
 #==================================#
 # CLEANING 36. Relation_To_Junction
