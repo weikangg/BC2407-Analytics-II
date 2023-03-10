@@ -62,21 +62,22 @@ mode <- function(v) {
 # CLEANING 1. AGE
 #=======================#
 
-trafficAccident2020.dt[Age == 0, ] # 0 incidences
+# Getting summary of unique values in the column
+print(n=95,trafficAccident2020.dt %>% 
+  group_by(Age) %>%
+  summarise(no_rows = length(Age), percentage = length(Age)/nrow(trafficAccident2020.dt) * 100))
 
-trafficAccident2020.dt[Age == 97, ] # 4 incidences (97 or older)
-# Since it's only 4 incidences, we assume all 4 cases are when the individual involved is 97 years old.
+# 5% of data, can be replaced with median
+nrow(trafficAccident2020.dt[Age %in% c(998,999), ])/nrow(trafficAccident2020.dt) * 100
 
-trafficAccident2020.dt[Age == 99, ] # 2 incidences (Unknown)
-# Since it's only 2 incidences, we will replace with the median in this case.
-# Getting median of remaining rows.
-median_Age <- median(trafficAccident2020.dt$Age[which(trafficAccident2020.dt$Age!=99)])
+median_Age <- median(trafficAccident2020.dt$Age[which(trafficAccident2020.dt$Age %!in% c(998,999))])
 median_Age
 
-trafficAccident2020.dt$Age[which(trafficAccident2020.dt$Age == 99)] <- median(trafficAccident2020.dt$Age)
+trafficAccident2020.dt$Age[which(trafficAccident2020.dt$Age %in% c(998,999))] <- median_Age
 
 # Checking (No more incidences)
-trafficAccident2020.dt[Age == 99, ]
+trafficAccident2020.dt[Age %in% c(998,999), ]
+
 
 
 #=======================#
@@ -1068,6 +1069,31 @@ trafficAccident2020.dt$Harmful_Event[trafficAccident2020.dt$Harmful_Event %in% c
 # Replacing '8' with Pedestrian
 trafficAccident2020.dt$Harmful_Event[trafficAccident2020.dt$Harmful_Event == 8] <- 'Pedestrian'
 
+# Replacing '9' with Pedalcyclists
+trafficAccident2020.dt$Harmful_Event[trafficAccident2020.dt$Harmful_Event == 9] <- 'Pedalcyclists'
+
+# Replacing '10', '12','14','15', '45', '54','55', '74', '98','99' with Motor_Vehicle
+trafficAccident2020.dt$Harmful_Event[trafficAccident2020.dt$Harmful_Event %in% c(10,12,14,15,45,54,55,74,98,99)] <- 'Motor_Vehicle'
+
+# Replacing '11', '49' with Animal
+trafficAccident2020.dt$Harmful_Event[trafficAccident2020.dt$Harmful_Event %in% c(11,49)] <- 'Animal'
+
+# Replacing '16,'17','18','43','51', '73','91','93' with Object
+trafficAccident2020.dt$Harmful_Event[trafficAccident2020.dt$Harmful_Event %in% c(16,17,18,43,51,73,91,93)] <- 'Object'
+
+# Replace '19', '20','21','23','24','25','26','30','31','38','39','40','46','50','52','53','57','59' with Static_Structures
+trafficAccident2020.dt$Harmful_Event[trafficAccident2020.dt$Harmful_Event %in% c(19,20,21,23,24,25,26,30,31,38,39,40,46,50,52,53,57,59)] <- 'Static_Structures'
+
+# Replace '32','33','34','35', '44','48', '58' with Pavement_Irregularities
+trafficAccident2020.dt$Harmful_Event[trafficAccident2020.dt$Harmful_Event %in% c(32,33,34,35,44,48,58)] <- 'Pavement_Irregularities'
+
+# Replace '41','42' with Plants
+trafficAccident2020.dt$Harmful_Event[trafficAccident2020.dt$Harmful_Event %in% c(41,42)] <- 'Plants'
+
+# Checking
+print(n=53,trafficAccident2020.dt %>% 
+        group_by(Harmful_Event) %>%
+        summarise(no_rows = length(Harmful_Event), percentage = length(Harmful_Event)/nrow(trafficAccident2020.dt) * 100))
 
 #==================================#
 # CLEANING 36. Relation_To_Junction
@@ -1244,5 +1270,10 @@ cols <- c("Sex", "Person_Type", "Injury_Severity", "Seat_Position",'Restraint_Eq
 setDT(trafficAccident2020.dt)[, (cols):= lapply(.SD, factor), .SDcols=cols]
 sapply(trafficAccident2020.dt, class)
 
-# Save cleaned dataset (Change Working Directory to Relevant directories)
-write.csv(trafficAccident2020.dt,"C:/Users/Wei Kang/OneDrive - Nanyang Technological University/Year 2/Sem 2/BC2407 Analytics II/B2407 Course Materials/Group Project/BC2407-Analytics-II-Project/Data Cleaning/trafficAccident2020_cleaned.csv", row.names = FALSE)
+# Checking all good
+str(trafficAccident2020.dt)
+
+#====================================================================================#
+# Save cleaned dataset (Change Working Directory to Respective Relevant directories)
+#====================================================================================#
+# write.csv(trafficAccident2020.dt,"C:/Users/Wei Kang/OneDrive - Nanyang Technological University/Year 2/Sem 2/BC2407 Analytics II/BC2407 Course Materials/Group Project/BC2407-Analytics-II-Project/Dataset/trafficAccident2020_cleaned.csv", row.names = FALSE)
