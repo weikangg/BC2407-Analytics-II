@@ -164,6 +164,8 @@ trafficAccident2020.dt %>%
   group_by(Injury_Severity) %>%
   summarise(no_rows = length(Injury_Severity), percentage = length(Injury_Severity)/nrow(trafficAccident2020.dt) * 100)
 
+# REMOVING THIS SINCE IT HAS VERY HIGH CORRELATION ON FATALITY RATE ITSELF.
+
 #==========================#
 # CLEANING 5. Seat_Position
 #==========================#
@@ -289,7 +291,7 @@ trafficAccident2020.dt %>%
   group_by(Non_Motorist_Location) %>%
   summarise(no_rows = length(Non_Motorist_Location))
 
-# Useless variable
+# Useless variable, REMOVING THIS VARIABLE.
 
 #==============================#
 # CLEANING 10. Num_Of_Occupants
@@ -1261,9 +1263,11 @@ print(n = 42,trafficAccident2020.dt %>%
 #                                                       END OF DATA CLEANING                                                       #
 #==================================================================================================================================#
 
+# Dropping redundant columns
+trafficAccident2020.dt[, c("Injury_Severity", "Non_Motorist_Location" ) := NULL]
 
 # Factorise Categorical Columns
-cols <- c("Sex", "Person_Type", "Injury_Severity", "Seat_Position",'Restraint_Equipment_Usage', 'Airbag', 'Drugs', 'Non_Motorist_Location', 'Hit_And_Run', 'Owner_Type', 'Vehicle_Configuration',
+cols <- c("Sex", "Person_Type", "Seat_Position",'Restraint_Equipment_Usage', 'Airbag', 'Drugs',  'Hit_And_Run', 'Owner_Type', 'Vehicle_Configuration',
           'Hazardous_Mat_Involvement', 'Speeding_Related','Trafficway_Flow', 'Num_Of_Lanes', 'Roadway_Profile', 'Pavement_Type', 'Roadway_Surface_Condition', 'Pre_Crash_Activity', 'Critical_Activity',
           'Drinking', 'Vehicle_Classification', 'Driver_Distracted', 'Driver_Factors', 'Day', 'Month', 'Day_Of_Week', 'Hour', 'Harmful_Event', 'Relation_To_Junction', 'Type_Of_Intersection', 'Location_Of_Crash',
           'Light_Condition', 'Weather')
@@ -1276,4 +1280,4 @@ str(trafficAccident2020.dt)
 #====================================================================================#
 # Save cleaned dataset (Change Working Directory to Respective Relevant directories)
 #====================================================================================#
-# write.csv(trafficAccident2020.dt,"C:/Users/Wei Kang/OneDrive - Nanyang Technological University/Year 2/Sem 2/BC2407 Analytics II/BC2407 Course Materials/Group Project/BC2407-Analytics-II-Project/Dataset/trafficAccident2020_cleaned.csv", row.names = FALSE)
+write.csv(trafficAccident2020.dt,"C:/Users/Wei Kang/OneDrive - Nanyang Technological University/Year 2/Sem 2/BC2407 Analytics II/BC2407 Course Materials/Group Project/BC2407-Analytics-II-Project/Dataset/trafficAccident2020_cleaned.csv", row.names = FALSE)
