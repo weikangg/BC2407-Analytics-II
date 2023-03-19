@@ -34,20 +34,18 @@ str(trafficAccident2020.dt)
 # Renamed columns to names that are easily understandable 
 setnames(trafficAccident2020.dt, c('AGE', 'SEX', 'PER_TYP', 'INJ_SEV', 'SEAT_POS', 'REST_USE', 'AIR_BAG', 'DRUGS', 'LOCATION', 'NUMOCCS', 'HIT_RUN', 'OWNER', 'V_CONFIG', 'HAZ_INV', 'TRAV_SP', 
                                    'DR_HGT', 'DR_WGT', 'PREV_SPD', 'SPEEDREL', 'VTRAFWAY', 'VNUM_LAN', 'VPROFILE', 'VPAVETYP', 'VSURCOND', 'P_CRASH1', 'P_CRASH2', 'DR_DRINK', 'VPICBODYCLASS',
-                                   'DRDISTRACT', 'DRIVERRF', 'DAY', 'MONTH', 'DAY_WEEK', 'HOUR', 'HARM_EV', 'RELJCT2', 'TYP_INT', 'REL_ROAD', 'LGT_COND', 'WEATHER', 'Fatality Rate (%)'), 
-                                 c('Age', 'Sex', 'Person_Type', 'Injury_Severity', 'Seat_Position', 'Restraint_Equipment_Usage', 'Airbag', 'Drugs', 'Non_Motorist_Location', 'Num_Of_Occupants',
+                                   'DRDISTRACT', 'DRIVERRF', 'DAY', 'MONTH', 'DAY_WEEK', 'HOUR', 'HARM_EV', 'RELJCT2', 'TYP_INT', 'REL_ROAD', 'LGT_COND', 'WEATHER'), 
+                                 c('Age', 'Sex', 'Person_Type', 'Death', 'Seat_Position', 'Restraint_Equipment_Usage', 'Airbag', 'Drugs', 'Non_Motorist_Location', 'Num_Of_Occupants',
                                    'Hit_And_Run', 'Owner_Type', 'Vehicle_Configuration', 'Hazardous_Mat_Involvement', 'Travel_Speed', 'Driver_Height', 'Driver_Weight', 'Previous_Speed_Convictions',
                                    'Speeding_Related','Trafficway_Flow', 'Num_Of_Lanes', 'Roadway_Profile', 'Pavement_Type', 'Roadway_Surface_Condition','Pre_Crash_Activity', 'Critical_Activity',
                                    'Drinking', 'Vehicle_Classification', 'Driver_Distracted', 'Driver_Factors', 'Day','Month', 'Day_Of_Week', 'Hour', 'Harmful_Event','Relation_To_Junction', 'Type_Of_Intersection',
-                                   'Location_Of_Crash', 'Light_Condition', 'Weather','Fatality_Rate'))
+                                   'Location_Of_Crash', 'Light_Condition', 'Weather'))
 
 # Dropped irrelevant Columns
-trafficAccident2020.dt[, c('ST_CASE', 'VEH_NO', 'PER_NO', 'YEAR', 'RUR_URB'):=NULL]
+# trafficAccident2020.dt[, c('ST_CASE', 'VEH_NO', 'PER_NO', 'YEAR', 'RUR_URB'):=NULL]
+trafficAccident2020.dt[, c('YEAR', 'RUR_URB'):=NULL]
 str(trafficAccident2020.dt)
 
-# Total of 34 Categorical X Variables, 6 Continuous X Variables and 1 Y Variable = 41 Variables.
-sum(sapply(trafficAccident2020.dt, is.factor))
-str(trafficAccident2020.dt)
 
 # Defining the mode helper function since R doesn't have inbuilt mode function
 mode <- function(v) {
@@ -131,40 +129,27 @@ trafficAccident2020.dt %>%
 
 
 #============================#
-# CLEANING 4. Injury_Severity
+# CLEANING 4. Death (Y-Var)
 #============================#
 
 # Getting no of values for each level, most of them seem to be male in the dataset. Replace with Mode.
 trafficAccident2020.dt %>% 
-  group_by(Injury_Severity) %>%
-  summarise(no_rows = length(Injury_Severity), percentage = length(Injury_Severity)/nrow(trafficAccident2020.dt) * 100)
-
-# Reclassify level 0,1,2 as Light Injury and level 3,4,5,6 as Fatal Injury
-trafficAccident2020.dt$Injury_Severity[trafficAccident2020.dt$Injury_Severity == 0] <- 'Light'
-trafficAccident2020.dt$Injury_Severity[trafficAccident2020.dt$Injury_Severity == 1] <- 'Light' 
-trafficAccident2020.dt$Injury_Severity[trafficAccident2020.dt$Injury_Severity == 2] <- 'Light' 
-trafficAccident2020.dt$Injury_Severity[trafficAccident2020.dt$Injury_Severity == 3] <- 'Fatal' 
-trafficAccident2020.dt$Injury_Severity[trafficAccident2020.dt$Injury_Severity == 4] <- 'Fatal' 
-trafficAccident2020.dt$Injury_Severity[trafficAccident2020.dt$Injury_Severity == 5] <- 'Fatal' 
-trafficAccident2020.dt$Injury_Severity[trafficAccident2020.dt$Injury_Severity == 6] <- 'Fatal' 
+  group_by(Death) %>%
+  summarise(no_rows = length(Death), percentage = length(Death)/nrow(trafficAccident2020.dt) * 100)
 
 # Replacing "Unknown/Not Reported" Category
-trafficAccident2020.dt[Injury_Severity %in% c(9), ] # 822 incidences, < 5% of no of rows. Hence, we simply replace with mode.
+trafficAccident2020.dt[Death %in% c(9), ] # 822 incidences, < 5% of no of rows. Hence, we simply replace with mode.
 822/nrow(trafficAccident2020.dt) * 100
 
-# Getting the Mode
-mode_Inj_Sev <- mode(trafficAccident2020.dt$Injury_Severity)
-mode_Inj_Sev
 
-# Replacing with mode
-trafficAccident2020.dt$Injury_Severity[trafficAccident2020.dt$Injury_Severity == 9] <- 'Fatal' 
+# Reclassify level 0,1,2,3,5 as No and level 4,6 as Yes
+trafficAccident2020.dt$Death[trafficAccident2020.dt$Death %in% c(0,1,2,3,5,9)] <- 'No'
+trafficAccident2020.dt$Death[trafficAccident2020.dt$Death %in% c(4,6)] <- 'Yes'
 
 # Checking
 trafficAccident2020.dt %>% 
-  group_by(Injury_Severity) %>%
-  summarise(no_rows = length(Injury_Severity), percentage = length(Injury_Severity)/nrow(trafficAccident2020.dt) * 100)
-
-# REMOVING THIS SINCE IT HAS VERY HIGH CORRELATION ON FATALITY RATE ITSELF.
+  group_by(Death) %>%
+  summarise(no_rows = length(Death), percentage = length(Death)/nrow(trafficAccident2020.dt) * 100)
 
 #==========================#
 # CLEANING 5. Seat_Position
@@ -1248,31 +1233,24 @@ trafficAccident2020.dt %>%
   group_by(Weather) %>%
   summarise(no_rows = length(Weather), percentage = length(Weather)/nrow(trafficAccident2020.dt) * 100)
 
-#===========================#
-# CLEANING 41. Fatality_Rate
-#===========================#
-
-# Getting no of values and percentage for each level
-print(n = 42,trafficAccident2020.dt %>% 
-  group_by(Fatality_Rate) %>%
-  summarise(no_rows = length(Fatality_Rate), percentage = length(Fatality_Rate)/nrow(trafficAccident2020.dt) * 100))
-
-# All good , nothing to clear
 
 #==================================================================================================================================#
 #                                                       END OF DATA CLEANING                                                       #
 #==================================================================================================================================#
 
 # Dropping redundant columns
-trafficAccident2020.dt[, c("Injury_Severity", "Non_Motorist_Location" ) := NULL]
+trafficAccident2020.dt[, c("Non_Motorist_Location" ) := NULL]
 
 # Factorise Categorical Columns
 cols <- c("Sex", "Person_Type", "Seat_Position",'Restraint_Equipment_Usage', 'Airbag', 'Drugs',  'Hit_And_Run', 'Owner_Type', 'Vehicle_Configuration',
           'Hazardous_Mat_Involvement', 'Speeding_Related','Trafficway_Flow', 'Num_Of_Lanes', 'Roadway_Profile', 'Pavement_Type', 'Roadway_Surface_Condition', 'Pre_Crash_Activity', 'Critical_Activity',
           'Drinking', 'Vehicle_Classification', 'Driver_Distracted', 'Driver_Factors', 'Day', 'Month', 'Day_Of_Week', 'Hour', 'Harmful_Event', 'Relation_To_Junction', 'Type_Of_Intersection', 'Location_Of_Crash',
-          'Light_Condition', 'Weather')
+          'Light_Condition', 'Weather','Death')
 setDT(trafficAccident2020.dt)[, (cols):= lapply(.SD, factor), .SDcols=cols]
 sapply(trafficAccident2020.dt, class)
+
+# Total of 33 Categorical X Variables, 6 Continuous X Variables and 1 Y Variable and 3 identifier variables = 43 Variables.
+sum(sapply(trafficAccident2020.dt, is.factor))
 
 # Checking all good
 str(trafficAccident2020.dt)
