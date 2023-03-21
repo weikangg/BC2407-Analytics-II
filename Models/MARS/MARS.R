@@ -4,77 +4,141 @@ library(caret)
 library(vip)
 library(pdp)
 library(caTools)
+library(data.table)
 
+data1 = read.csv("C:/Users/ASUS/OneDrive - Nanyang Technological University/Documents/BC2407-Analytics-II-Project/Dataset/trafficAccident2020_cleaned.csv", stringsAsFactors = T)
+data1=as.data.table(data1)
 
-setwd("C:/Users/ASUS/OneDrive - Nanyang Technological University/Documents/BC2407-Analytics-II-Project/Dataset")
-data1 = read.csv("trafficAccident2020_cleaned.csv")
+# Dropping Irrelevant Columns
+data1 = subset(data1, select = -c(ST_CASE, VEH_NO, PER_NO))
 
+# Categorising Relevant Numerical Columns
+cols <- c("Day", "Month", "Day_Of_Week", "Hour")
+data1[,(cols):=lapply(.SD, as.factor),.SDcols=cols]
 summary(data1)
 
+#Train-Test Split
 set.seed(888)
-train <- sample.split(Y = data1$Fatality_Rate, SplitRatio = 0.7)
+train <- sample.split(Y = data1$Death, SplitRatio = 0.7)
 trainset <- subset(data1, train == T)
 testset <- subset(data1, train == F)
+threshold = 0.5
+
+#Table of Results
+columnName = c("Number of Degree","FPR","FNR", "Accuracy", "F1 Score", "F2 Score") 
+results.df = data.frame(matrix(nrow = 0, ncol = length(columnName)))
+colnames(results.df) = columnName
 
 #1 Degree Mars Model
-m.mars1 <- earth(Fatality_Rate ~ . , degree=1, data=data1)
+m.mars1 <- earth(Death ~ . , degree=1, data=trainset, glm = list(family=binomial))
 summary(m.mars1)
-m.mars1.yhat <- predict(m.mars1)
-RMSE.mars1 <- round(sqrt(mean((data1$Fatality_Rate - m.mars1.yhat)^2)))
-RMSE.mars1
-sqrt(m.mars1$rss/nrow(data1))
 
-#1 Degree Mars Model (train-test)
-m.mars1 <- earth(Fatality_Rate ~ . , degree=1, data=trainset)
-summary(m.mars1)
-m.mars1.yhat <- predict(m.mars1,newdata = testset)
-RMSE.mars1 <- round(sqrt(mean((data1$Fatality_Rate - m.mars1.yhat)^2)))
-RMSE.mars1
-sqrt(m.mars1$rss/nrow(data1))
+prob.test <- predict(m.mars1, newdata = testset, type = 'response')
+data.frame(prob.test)
+Predicted_Testset <- ifelse(prob.test > threshold, 1, 0)
+result1 <- table(Actual_Testset = testset$Death, Predicted_Testset, deparse.level = 2)
+result1
+
+fnr = (result1[2,"0"] / (result1[2,"0"] + result1[2,"1"])) * 100
+fpr = (result1[1,"1"] / (result1[1,"1"] + result1[1,"0"])) * 100
+acc = (result1[1,"0"] + result1[2,"1"])/ (result1[1,"0"] + result1[1,"1"] + result1[2,"0"] + result1[2,"1"]) * 100
+precision = result1[2,"1"]/ (result1[2,"1"] + result1[1,"1"])
+recall = result1[2,"1"]/ (result1[2,"1"] + result1[2,"0"])
+f1 = 2 * ((precision*recall)/(precision+recall))
+f2 = 5 * ((precision*recall)/((4*precision)+recall))
+results.df[nrow(results.df)+1,] = c(1,fpr,fnr,acc,f1,f2)
+results.df
 
 #2 Degree Mars Model
-m.mars2 <- earth(Fatality_Rate ~ . , degree=2, data=data1)
+m.mars2 <- earth(Death ~ . , degree=2, data=trainset, glm = list(family=binomial))
 summary(m.mars2)
-m.mars2.yhat <- predict(m.mars2)
-RMSE.mars2 <- round(sqrt(mean((data1$Fatality_Rate - m.mars2.yhat)^2)))
-RMSE.mars2
-sqrt(m.mars2$rss/nrow(data1))
+
+prob.test <- predict(m.mars2, newdata = testset, type = 'response')
+data.frame(prob.test)
+Predicted_Testset <- ifelse(prob.test > threshold, 1, 0)
+result2 <- table(Actual_Testset = testset$Death, Predicted_Testset, deparse.level = 2)
+result2
+
+fnr = (result2[2,"0"] / (result2[2,"0"] + result2[2,"1"])) * 100
+fpr = (result2[1,"1"] / (result2[1,"1"] + result2[1,"0"])) * 100
+acc = (result2[1,"0"] + result2[2,"1"])/ (result2[1,"0"] + result2[1,"1"] + result2[2,"0"] + result2[2,"1"]) * 100
+precision = result2[2,"1"]/ (result2[2,"1"] + result2[1,"1"])
+recall = result2[2,"1"]/ (result2[2,"1"] + result2[2,"0"])
+f1 = 2 * ((precision*recall)/(precision+recall))
+f2 = 5 * ((precision*recall)/((4*precision)+recall))
+results.df[nrow(results.df)+1,] = c(2,fpr,fnr,acc,f1,f2)
+results.df
 
 #3 Degree Mars Model
-m.mars3 <- earth(Fatality_Rate ~ . , degree=3, data=data1)
+m.mars3 <- earth(Death ~ . , degree=3, data=trainset, glm = list(family=binomial))
 summary(m.mars3)
-m.mars3.yhat <- predict(m.mars3)
-RMSE.mars3 <- round(sqrt(mean((data1$Fatality_Rate - m.mars3.yhat)^2)))
-RMSE.mars3
-sqrt(m.mars3$rss/nrow(data1))
+
+prob.test <- predict(m.mars3, newdata = testset, type = 'response')
+data.frame(prob.test)
+Predicted_Testset <- ifelse(prob.test > threshold, 1, 0)
+result3 <- table(Actual_Testset = testset$Death, Predicted_Testset, deparse.level = 2)
+result3
+
+fnr = (result3[2,"0"] / (result3[2,"0"] + result3[2,"1"])) * 100
+fpr = (result3[1,"1"] / (result3[1,"1"] + result3[1,"0"])) * 100
+acc = (result3[1,"0"] + result3[2,"1"])/ (result3[1,"0"] + result3[1,"1"] + result3[2,"0"] + result3[2,"1"]) * 100
+precision = result3[2,"1"]/ (result3[2,"1"] + result3[1,"1"])
+recall = result3[2,"1"]/ (result3[2,"1"] + result3[2,"0"])
+f1 = 2 * ((precision*recall)/(precision+recall))
+f2 = 5 * ((precision*recall)/((4*precision)+recall))
+results.df[nrow(results.df)+1,] = c(3,fpr,fnr,acc,f1,f2)
+results.df
 
 #4 Degree Mars Model
-m.mars4 <- earth(Fatality_Rate ~ . , degree=4, data=data1)
+m.mars4 <- earth(Death ~ . , degree=4, data=trainset, glm = list(family=binomial))
 summary(m.mars4)
-m.mars4.yhat <- predict(m.mars4)
-RMSE.mars4 <- round(sqrt(mean((data1$Fatality_Rate - m.mars4.yhat)^2)))
-RMSE.mars4
-sqrt(m.mars4$rss/nrow(data1)) #RMSE = 14.56192
 
-#5 Degree Mars Model 
-m.mars5 <- earth(Fatality_Rate ~ . , degree=5, data=data1)
-summary(m.mars5)
-m.mars5.yhat <- predict(m.mars5)
-RMSE.mars5 <- round(sqrt(mean((data1$Fatality_Rate - m.mars5.yhat)^2)))
-RMSE.mars5
-sqrt(m.mars5$rss/nrow(data1)) #(Degree > 5 is all same RMSE as Degree 4)
+prob.test <- predict(m.mars4, newdata = testset, type = 'response')
+data.frame(prob.test)
+Predicted_Testset <- ifelse(prob.test > threshold, 1, 0)
+result4 <- table(Actual_Testset = testset$Death, Predicted_Testset, deparse.level = 2)
+result4
 
-#With CV
-m.mars6 <- earth(Fatality_Rate ~ . , degree = 4, pmethod = "cv", nfold = 10, ncross = 1, data=data1)
-summary(m.mars6)
-RMSE.mars6 <- sqrt((m.mars6$rss)/nrow(data1))
-RMSE.mars6 #RMSE = 14.56694
-  #varimpt <- evimp(m.mars5)
-  #print(varimpt)
+fnr = (result4[2,"0"] / (result4[2,"0"] + result4[2,"1"])) * 100
+fpr = (result4[1,"1"] / (result4[1,"1"] + result4[1,"0"])) * 100
+acc = (result4[1,"0"] + result4[2,"1"])/ (result4[1,"0"] + result4[1,"1"] + result4[2,"0"] + result4[2,"1"]) * 100
+precision = result4[2,"1"]/ (result4[2,"1"] + result4[1,"1"])
+recall = result4[2,"1"]/ (result4[2,"1"] + result4[2,"0"])
+f1 = 2 * ((precision*recall)/(precision+recall))
+f2 = 5 * ((precision*recall)/((4*precision)+recall))
+results.df[nrow(results.df)+1,] = c(4,fpr,fnr,acc,f1,f2)
+results.df
+
+  #Highest F2 Score = 0.8638669, Degree = 1
+
+#Using the optimal model, where degree=1, with Cross-Validation
+m.mars1CV <- earth(Death ~ . , degree = 1, pmethod = "cv", nfold = 10, ncross = 1, data=trainset, glm = list(family=binomial))
+summary(m.mars1CV)
+
+prob.test <- predict(m.mars1CV, newdata = testset, type = 'response')
+data.frame(prob.test)
+Predicted_Testset <- ifelse(prob.test > threshold, 1, 0)
+result1CV <- table(Actual_Testset = testset$Death, Predicted_Testset, deparse.level = 2)
+result1CV
+
+fnr = (result1CV[2,"0"] / (result1CV[2,"0"] + result1CV[2,"1"])) * 100
+fpr = (result1CV[1,"1"] / (result1CV[1,"1"] + result1CV[1,"0"])) * 100
+acc = (result1CV[1,"0"] + result1CV[2,"1"])/ (result1CV[1,"0"] + result1CV[1,"1"] + result1CV[2,"0"] + result1CV[2,"1"]) * 100
+precision = result1CV[2,"1"]/ (result1CV[2,"1"] + result1CV[1,"1"])
+recall = result1CV[2,"1"]/ (result1CV[2,"1"] + result1CV[2,"0"])
+f1 = 2 * ((precision*recall)/(precision+recall))
+f2 = 5 * ((precision*recall)/((4*precision)+recall))
+results.df[nrow(results.df)+1,] = c(1,fpr,fnr,acc,f1,f2, "With CV")
+results.df
+
+  #No Change in F2 Score = 0.8638669, Degree = 1 (With CV)
+
+varimpt <- evimp(m.mars1CV)
+print(varimpt)
 
 
 #-----------------
-#Parameter Tuning Testing
+#Parameter Tuning Testing --> to validate the choice of degree and nprune
 #-----------------
 hyper_grid <- expand.grid(
   degree = 1:10,
@@ -83,11 +147,9 @@ hyper_grid <- expand.grid(
 
 head(hyper_grid)
 
-set.seed(123) 
-
 cv_mars <- train(
-  x = subset(data1, select = -Fatality_Rate),
-  y = data1$Fatality_Rate,
+  x = subset(data1, select = -Death),
+  y = data1$Death,
   method = "earth",
   metric = "RMSE",
   trControl = trainControl(method = "cv", number = 10),
