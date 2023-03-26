@@ -28,6 +28,8 @@ sum(is.na(data))
 
 # To check baseline reference level for our Y variable, "Death"
 levels(data$Death) #Baseline is Death = "No"
+data$Death <- relevel(data$Death, ref = "Yes")
+levels(data$Death) #Baseline is Death = "Yes"
 
 
 ### Logistic Regression Modelling ==============================================
@@ -35,7 +37,7 @@ levels(data$Death) #Baseline is Death = "No"
 ### lm1; Logistic Regression Model with all variables
 lm1 <- glm(Death ~ ., family = binomial, data = data)
 summary (lm1)
-vif(lm1) 
+vif(lm1)
 ## Vehicle_Configuration, Pre_Crash_Activity, Critical_Activity, Vehicle_Classification, Relation_To_Junction and Type_Of_Intersection 
 ## have GVIF > 10 [6 variables]
 
@@ -125,6 +127,9 @@ lm6 = update(lm5, ~. -Critical_Activity)
 summary(lm6) #no more insignificant variables (i.e. all variables have at least 2 *s)
 vif(lm6) #all variables have GVIF < 10, i.e. no more multicollinearity issue.
 
+### Check variable importance of the independent variables in the lm6 model.
+varImp(lm6, scale = True)
+
 ### MODEL THAT WILL BE USED FOR TRAIN-TEST ###
 
 #===============================================================================
@@ -183,6 +188,16 @@ threshold <- 0.5
 prob.train <- predict(train_lm6, type ='response')
 prob.train <- as.data.frame(prob.train)
 train_lm6.predict <- ifelse(prob.train > threshold,"Yes","No")
+
+str(train_lm6.predict) #it is in character
+train_lm6.predict<- factor(train_lm6.predict)
+str(train_lm6.predict) #it is in factor
+levels(train_lm6.predict) #Baseline is Death = "No"
+
+# Change the Baseline Reference level for Death to "Yes" instead of "No".
+train_lm6.predict <- relevel(train_lm6.predict, ref = "Yes")
+levels(train_lm6.predict)   # Verifies "Yes" is now the first factor i.e. baseline ref.
+
 log_train <- confusionMatrix(data = table(trainset$Death, train_lm6.predict, deparse.level = 2))
 log_train[["table"]]
 
@@ -202,21 +217,29 @@ log_train[["table"]]
 # In this case, a positive case is death, and a negative case is no death.
 # Therefore, a false positive is the test predict there is death, but actual = no death.
 # A false negative is the test predict no death when there is actually a death.
-# TP: 5725
-# TN: 6238
-# FP: 1419
-# FN: 761
+# TP: 761
+# TN: 1419
+# FP: 6238
+# FN: 5725
 
 
 ## Storing the metrics into a table
-trainset_accuracy_log[1,2] <- (log_train[["table"]][3] / (log_train[["table"]][3] + log_train[["table"]][1])) * 100 #fpr -> FP/Total Number of Negatives
-trainset_accuracy_log[1,3] <- (log_train[["table"]][2] / (log_train[["table"]][2] + log_train[["table"]][4])) * 100 #fnr -> FN /Total Number of Positives
+trainset_accuracy_log[1,2] <- (log_train[["table"]][2] / (log_train[["table"]][2] + log_train[["table"]][4])) * 100 #fpr -> FP/Total Number of Negatives
+trainset_accuracy_log[1,3] <- (log_train[["table"]][3] / (log_train[["table"]][3] + log_train[["table"]][1])) * 100 #fnr -> FN /Total Number of Positives
 
 # We should be more concerned about false negatives because these are cases that result in deaths too.
-trainset_accuracy_log[1,4] <- ((log_train[["overall"]][1])) * 100#error
+trainset_accuracy_log[1,4] <- ((log_train[["table"]][1] + log_train[["table"]][4]) / 14143) * 100 #accuracy -> (TP + TN) / Total Observations
 #trainset_accuracy_log[1,5] <- auc@y.values # no AUC
-trainset_accuracy_log[1,5] <- (log_train[["table"]][4] / (log_train[["table"]][4] + (0.5 * (log_train[["table"]][3] + log_train[["table"]][2])))) #f1 score
-trainset_accuracy_log[1,6] <- (log_train[["table"]][4] / (log_train[["table"]][4] + 0.2 * log_train[["table"]][3] + 0.8 * log_train[["table"]][2])) #f2 score
+
+# Precision -> TP / (TP + FP)
+trainset_precision <- (log_train[["table"]][1] / (log_train[["table"]][1] + log_train[["table"]][2])) * 100 
+
+# Recall -> TP / (TP + FN)
+trainset_recall <- (log_train[["table"]][1] / (log_train[["table"]][1] + log_train[["table"]][3])) * 100 
+
+# F1 & F2 scores:
+trainset_accuracy_log[1,5] <- 2 * ((trainset_precision * trainset_recall) / (trainset_precision + trainset_recall)) #f1 score -> 2 * ((P * R) / (P + R)) 
+trainset_accuracy_log[1,6] <- log_train[["table"]][1] / (log_train[["table"]][1] + (0.2 * log_train[["table"]][2]) + (0.8 * log_train[["table"]][3])) #f2 score -> TP / (TP + 0.2FP + 0.8FN)
 
 ## Checking all the model evaluation metrics for the trainset
 trainset_accuracy_log
@@ -231,8 +254,17 @@ prob.test <- predict(train_lm6, newdata = testset, type ='response')
 prob.test
 train_lm6.predict.test <- ifelse (prob.test > threshold,"Yes","No")
 
+str(train_lm6.predict.test) #it is in character
+train_lm6.predict.test<- factor(train_lm6.predict.test)
+str(train_lm6.predict.test) #it is in factor
+levels(train_lm6.predict.test) #Baseline is Death = "No"
+
+# Change the Baseline Reference level for Death to "Yes" instead of "No".
+train_lm6.predict.test <- relevel(train_lm6.predict.test, ref = "Yes")
+levels(train_lm6.predict.test)   # Verifies "Yes" is now the first factor i.e. baseline ref.
+
 log_test <- confusionMatrix(data = table(testset$Death, train_lm6.predict.test,deparse.level = 2))
-log_test
+log_test[["table"]]
 
 ## PAST WORKING [PLS IGNORE]
 #table2 <- table (testset.Actual = testset$Death, train_lm6.predict.test, deparse.level = 2)
@@ -244,19 +276,29 @@ log_test
 # 0.847 (3sf)
 
 ## Storing the metrics into a table
-testset_accuracy_log[1,2] <- (log_test[["table"]][3] / (log_test[["table"]][3] + log_test[["table"]][1])) * 100 #fpr -> FP/Total Number of Negatives
-testset_accuracy_log[1,3] <- (log_test[["table"]][2] / (log_test[["table"]][2] + log_test[["table"]][4])) * 100 #fnr -> FN /Total Number of Positives
-testset_accuracy_log[1,4] <- ((log_test[["overall"]][1])) * 100#error
-testset_accuracy_log[1,5] <- (log_test[["table"]][4] / (log_test[["table"]][4] + (0.5 * (log_test[["table"]][3] + log_test[["table"]][2])))) #f1 score
-testset_accuracy_log[1,6] <- (log_test[["table"]][4] / (log_test[["table"]][4] + 0.2 * log_test[["table"]][3] + 0.8 * log_test[["table"]][2])) #f2 score
+testset_accuracy_log[1,2] <- (log_test[["table"]][2] / (log_test[["table"]][2] + log_test[["table"]][4])) * 100 #fpr -> FP/Total Number of Negatives
+testset_accuracy_log[1,3] <- (log_test[["table"]][3] / (log_test[["table"]][3] + log_test[["table"]][1])) * 100 #fnr -> FN /Total Number of Positives
+
+# We should be more concerned about false negatives because these are cases that result in deaths too.
+testset_accuracy_log[1,4] <- ((log_test[["table"]][1] + log_test[["table"]][4]) / 6060) * 100 #accuracy -> (TP + TN) / Total Observations
+#trainset_accuracy_log[1,5] <- auc@y.values # no AUC
+
+# Precision -> TP / (TP + FP)
+testset_precision <- (log_test[["table"]][1] / (log_test[["table"]][1] + log_test[["table"]][2])) * 100 
+
+# Recall -> TP / (TP + FN)
+testset_recall <- (log_test[["table"]][1] / (log_test[["table"]][1] + log_test[["table"]][3])) * 100 
+
+# F1 & F2 scores:
+testset_accuracy_log[1,5] <- 2 * ((testset_precision * testset_recall) / (testset_precision + testset_recall)) #f1 score -> 2 * ((P * R) / (P + R)) 
+testset_accuracy_log[1,6] <- log_test[["table"]][1] / (log_test[["table"]][1] + (0.2 * log_test[["table"]][2]) + (0.8 * log_test[["table"]][3])) #f2 score -> TP / (TP + 0.2FP + 0.8FN)
+
 
 ## Checking all the model evaluation metrics for the testset
 testset_accuracy_log
 
 #===============================================================================
 #===============================================================================
-
-### The subsequent lines of code are deployed to find answers to our next business problem regarding the identification of a high risk driver.
 
 
 
