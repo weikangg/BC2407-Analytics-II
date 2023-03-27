@@ -22,6 +22,7 @@ library(caTools)
 library(caret)
 library(ROCR)
 library(varImp)
+library(cvms)
 
 #-----------------------------------GETTING CSV FROM GITHUB----------------------------------------#
 
@@ -58,6 +59,11 @@ boruta.results$finalDecision
 # 32 attributes confirmed important: Age, Airbag, Critical_Activity, Drinking, Driver_Distracted and 27 more;
 # 4 attributes confirmed unimportant: Day, Day_Of_Week, Hazardous_Mat_Involvement, Month;
 # 2 tentative attributes left: Pavement_Type, Previous_Speed_Convictions;
+
+# Re-leveling of Death factor
+levels(trafficAccident2020.dt$Death)
+trafficAccident2020.dt$Death <- relevel(trafficAccident2020.dt$Death, ref = "Yes")
+levels(trafficAccident2020.dt$Death)
 
 #===============================================================================#
 
@@ -108,13 +114,15 @@ varImpPlot(rf_trafficAccident1, type = 1)
 varImpPlot(rf_trafficAccident1, type = 2)
 par(mfrow = c(1,1))
 
-varImp(rf_trafficAccident2)
-
 #Computing train set predictions and plotting of confusion matrix
 trainset_prob <- predict(rf_trafficAccident1, type='prob')
 trainset_prob <- as.data.frame(trainset_prob)
+trainset_prob
 trainset_pred <- ifelse(test = trainset_prob$Yes > threshold, "Yes", "No")
-rf_train_cf <- confusionMatrix(data = table(trainset$Death, trainset_pred, deparse.level = 2))
+trainset$Death %>% summary()
+trainset_pred %>% glimpse()
+rf_train_cf <- confusionMatrix(data = table(trainset$Death, trainset_pred, deparse.level = 2), positive = "Yes")
+rf_train_cf
 rf_train_cf[["table"]]
 
 #getting the area under curve
@@ -182,7 +190,7 @@ varImpPlot(rf_trafficAccident2, type = 1)
 varImpPlot(rf_trafficAccident2, type = 2)
 par(mfrow = c(1,1))
 
-#Computing train set predictions and plotting of confusion matrix
+# Computing train set predictions and plotting of confusion matrix
 trainset_prob <- predict(rf_trafficAccident2, type='prob')
 trainset_prob <- as.data.frame(trainset_prob)
 trainset_pred <- ifelse(test = trainset_prob$Yes > threshold, "Yes", "No")
@@ -210,7 +218,7 @@ trainset_accuracy_rf
 testset_prob <- predict(rf_trafficAccident2, type='prob', newdata = testset)
 testset_prob <- as.data.frame(testset_prob)
 testset_pred <- ifelse(test = testset_prob$Yes > threshold, "Yes", "No")
-rf_test_cf <- confusionMatrix(data = table(testset$Death, testset_pred,deparse.level = 2))
+rf_test_cf <- confusionMatrix(data = table(testset$Death, testset_pred,deparse.level = 2), positive = 'Yes')
 
 rf_test_cf
 
@@ -229,6 +237,20 @@ testset_accuracy_rf[1,7] <- (rf_test_cf[["table"]][4] / (rf_test_cf[["table"]][4
 # Checking
 testset_accuracy_rf
 
+table1 <- table(Testset.Actual =  testset$Death, testset_pred, deparse.level = 2)
+table1
+cfm1 <- as_tibble(table1)
+cfm1
+# Confusion matrix
+plot_confusion_matrix(cfm1, 
+                      target_col = "Testset.Actual", 
+                      prediction_col = "testset_pred",
+                      counts_col = "n",
+                      place_x_axis_above = FALSE,
+                      add_col_percentages = FALSE,
+                      add_row_percentages = FALSE)
+
+
 # Optimised model improves by 0.4% accuracy for both test and train set.
 # Final Accuracy: 86.8%
 
@@ -237,7 +259,89 @@ testset_accuracy_rf
 var.impt <- as.data.frame(var.impt)
 sorted.var.impt <- var.impt[order(var.impt$MeanDecreaseAccuracy, decreasing = TRUE), ]
 subset.var.impt <- subset(sorted.var.impt, MeanDecreaseAccuracy > 10)
+subset.var.impt
 nrow(subset.var.impt)
+
+#extracting variables names for top 20 RF variables
+impvar_under <- rownames(var.impt)[order(var.impt[,3], decreasing=TRUE)][1:20]
+impvar_under
+
+#plotting the top 20 variables partial dependence plots
+par(mfrow=c(2, 2))
+
+for (i in 1:2) {
+  partialPlot(rf_trafficAccident2, testset, impvar_under[i], xlab = "",
+              main=paste("Partial Dependence on", impvar_under[i]), which.class = "Yes", las = 3)
+}
+# no seatbelt or restraint equipment, die
+
+par(mfrow=c(2, 2))
+for (i in 3:4) {
+  partialPlot(rf_trafficAccident2, testset, impvar_under[i], xlab = "",
+              main=paste("Partial Dependence on", impvar_under[i]), which.class = "Yes", las = 3)
+}
+
+par(mfrow=c(2, 2))
+for (i in 5:6) {
+  partialPlot(rf_trafficAccident2, testset, impvar_under[i], xlab = "",
+              main=paste("Partial Dependence on", impvar_under[i]), which.class = "Yes", las = 3)
+}
+
+par(mfrow=c(2, 2))
+for (i in 7:8) {
+  partialPlot(rf_trafficAccident2, testset, impvar_under[i], xlab = "",
+              main=paste("Partial Dependence on", impvar_under[i]), which.class = "Yes", las = 3)
+}
+
+par(mfrow=c(2, 2))
+for (i in 9:10) {
+  partialPlot(rf_trafficAccident2, testset, impvar_under[i], xlab = "",
+              main=paste("Partial Dependence on", impvar_under[i]), which.class = "Yes", las = 3)
+}
+
+par(mfrow=c(2, 2))
+for (i in 11:12) {
+  partialPlot(rf_trafficAccident2, testset, impvar_under[i], xlab = "",
+              main=paste("Partial Dependence on", impvar_under[i]), which.class = "Yes", las = 3)
+}
+
+
+par(mfrow=c(2, 2))
+for (i in 13:14) {
+  partialPlot(rf_trafficAccident2, testset, impvar_under[i], xlab = "",
+              main=paste("Partial Dependence on", impvar_under[i]), which.class = "Yes", las = 3)
+}
+
+
+par(mfrow=c(2, 2))
+for (i in 15:16) {
+  partialPlot(rf_trafficAccident2, testset, impvar_under[i], xlab = "",
+              main=paste("Partial Dependence on", impvar_under[i]), which.class = "Yes", las = 3)
+}
+
+par(mfrow=c(2, 2))
+for (i in 17:18) {
+  partialPlot(rf_trafficAccident2, testset, impvar_under[i], xlab = "",
+              main=paste("Partial Dependence on", impvar_under[i]), which.class = "Yes", las = 3)
+}
+
+par(mfrow=c(2, 2))
+for (i in 19:20) {
+  partialPlot(rf_trafficAccident2, testset, impvar_under[i], xlab = "",
+              main=paste("Partial Dependence on", impvar_under[i]), which.class = "Yes", las = 3)
+}
+
+# plot id 1,2,3,5,8,13
+plotid = c(1,2,3,5,8,13)
+par(mfrow=c(2, 3))
+for (i in plotid) {
+  partialPlot(rf_trafficAccident2, testset, impvar_under[i], xlab = "",
+              main=paste("Partial Dependence on", impvar_under[i]), which.class = "Yes", las = 3)
+}
+
+#reset plot settings
+par(mfrow=c(1,1))
+
 
 # Save as RDS File so that it doesn't need to be retrained. (Set working directory first)
 # setwd()
